@@ -11,12 +11,7 @@ var maxDepth = 4
 func main(){
 	printBanner()
 
-	board := [4][4]interface{}{
-		{WSCC, nil, WSCS, nil} ,
-		{nil, WSOC, nil, WSOS} ,
-		{BTCS, nil, BTOS, nil} ,
-		{WTOS, nil, nil, WTCC} ,
-	}
+	board := initialBoard
 
 	println(ColorWhite, "\nStarting board: ")
 	printBoard(board, true)

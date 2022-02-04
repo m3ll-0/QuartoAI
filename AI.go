@@ -9,7 +9,7 @@ import (
 
 func runAI(board [4][4]interface{}, pieceToPlace Piece) []interface{} {
 
-	setOptimizedMaxDepth(1, board)
+	setOptimizedMaxDepth(initialOptimizationScale, board) // get maxDepth from config
 
 	println(ColorWhite, "\nCurrent board: ")
 	printBoard(board, true)

@@ -145,7 +145,8 @@ func getInputWhatPieceOpponentHasGiven(currentBoard [4][4]interface{}) Piece{
 
 	for true {
 		time.Sleep(1 * time.Second)
-		fmt.Println("\nEnter the name of the piece opponent has given: ")
+		fmt.Print(ColorWhite, fmt.Sprintf("Enter the name of the piece opponent has given: "))
+
 		var pieceString string
 		fmt.Scan(&pieceString)
 
@@ -219,18 +220,18 @@ func getInputPositionOpponentPlacePiece(board [4][4]interface{}, piece Piece) []
 	for true {
 		time.Sleep(1 * time.Second)
 
-		fmt.Print(fmt.Sprintf("\nEnter row position opponent placed [%v]: ", piece))
+		fmt.Print(ColorWhite, fmt.Sprintf("\nEnter row position opponent placed [%v]: ", piece))
 		var row int
 
-		_, errRow := fmt.Scan(&row)
+		_, errRow := fmt.Scanln(&row)
 		if errRow != nil {
 			println(ColorRed, "Error selecting row position of opponent piece. Try again.")
 			continue
 		}
 
-		fmt.Print(fmt.Sprintf("Enter column position opponent placed [%v]: ", piece))
+		fmt.Print(ColorWhite, fmt.Sprintf("Enter column position opponent placed [%v]: ", piece))
 		var col int
-		_, errCol := fmt.Scan(&col)
+		_, errCol := fmt.Scanln(&col)
 		if errCol != nil {
 			println(ColorRed, "Error selecting column position of opponent piece. Try again.")
 			continue

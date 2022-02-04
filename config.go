@@ -1,5 +1,16 @@
 package main
 
+// Set initial board
+var initialBoard = [4][4]interface{}{
+{WSCC, nil, WSCS, nil} ,
+{nil, WSOC, nil, WSOS} ,
+{BTCS, nil, BTOS, nil} ,
+{WTOS, nil, nil, WTCC} ,
+}
+
+// Set optimization scale
+var initialOptimizationScale = 1
+
 // Empty board
 //	{nil, nil, nil, nil} ,
 //	{nil, nil, nil, nil} ,
@@ -48,3 +59,4 @@ package main
 //{WTOS, nil, nil, WTCC} ,
 //
 //pieceToPlace := WTCS
+
