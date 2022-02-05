@@ -1,5 +1,7 @@
 package main
 
+type fnGenerator func(node *TreeNode)
+
 type Piece struct {
 	color string
 	height string

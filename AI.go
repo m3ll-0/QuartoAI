@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+
 var nodeCounter = 0
 
 func runAI(board [4][4]interface{}, pieceToPlace Piece) []interface{} {
@@ -21,11 +22,21 @@ func runAI(board [4][4]interface{}, pieceToPlace Piece) []interface{} {
 
 	// Create root node and generate children
 	rootNode := &TreeNode{nil, board, stock, []Move{}, []*TreeNode{}, nil,false, true, false }
-	generateInitialChildren(rootNode, pieceToPlace)
 
-	//rootNode.CountTree()
-	//println(nodeCounter)
-	//os.Exit(1)
+
+	// Get generator method from config
+	if generatorMethodConfig == "DFS" {
+		generateInitialChildren(rootNode, pieceToPlace, addChildrenDFS)
+	} else if generatorMethodConfig == "BFS" {
+		generateInitialChildren(rootNode, pieceToPlace, addChildrenBFS)
+	} else {
+		println(ColorRed, fmt.Sprintf("Error: generator method does not exist."))
+		os.Exit(1)
+	}
+
+	println(fmt.Sprintf("[*] Using generator method [%v].", generatorMethodConfig))
+
+	println(fmt.Sprintf("[*] Evaluating children of root node using minimax algorithm."))
 
 	// Evaluate each first child node of root node independently and add first move to endList
 	firstLevelNodeList := []*TreeNode{}
@@ -137,7 +148,7 @@ func determineBestFirstLevelNode(firstLevelNodeList []*TreeNode) []interface{}{
 }
 
 // GeneratePiecePlacementBoards Generates all positions from setting a piece
-func generateInitialChildren(rootNode *TreeNode, pieceToPlace Piece){
+func generateInitialChildren(rootNode *TreeNode, pieceToPlace Piece, generator fnGenerator){
 
 	println(ColorGreen, fmt.Sprintf("\n[*] Generating full game tree."))
 	counter = 0 // Reset amount of nodes generated for statistics
@@ -183,13 +194,13 @@ func generateInitialChildren(rootNode *TreeNode, pieceToPlace Piece){
 
 				rootNode.children = append(rootNode.children, newNode)
 
-				addChildrenRecursively(newNode)
+				generator(newNode)
 			}
 		}
 	}
 }
 
-func addChildrenRecursively(node *TreeNode){
+func addChildrenDFS(node *TreeNode){
 	for _, pieceToPlace := range node.currentStock{
 		// Place piece on every open spot
 		for rowNumber, row := range node.currentBoard{ // Every row
@@ -252,10 +263,86 @@ func addChildrenRecursively(node *TreeNode){
  					node.children = append(node.children, newNode)
 
 					if !(len(newStock) == 0 || newNode.isQuartoNode) && !(len(newNode.currentMoves) >= maxDepth)  { // If no more pieces, stop iterating
-						addChildrenRecursively(newNode)
+						addChildrenDFS(newNode)
 					}
 				}
 			}
+		}
+	}
+}
+
+func addChildrenBFS(node *TreeNode){
+	// For each child node:
+	// Generate children first
+
+	for _, pieceToPlace := range node.currentStock{
+		// Place piece on every open spot
+		for rowNumber, row := range node.currentBoard{ // Every row
+			for columnNumber, spot := range row {
+				if spot == nil { // Spot is free
+
+					// Create new board filling free spot
+					newBoard := node.currentBoard
+					newBoard[rowNumber][columnNumber] = pieceToPlace
+					newStock := removePieceFromStock(node.currentStock, pieceToPlace)
+
+					newMove := Move{rowNumber: rowNumber, columnNumber: columnNumber, piece: pieceToPlace}
+					newMoveList := append(node.currentMoves, newMove)
+
+					newBoardHasQuarto := boardHasQuarto(newBoard)
+
+					newNode := &TreeNode{
+						currentBoard: newBoard,
+						currentMoves: newMoveList,
+						currentStock: newStock,
+						parent: node,
+						children: []*TreeNode{},
+						isQuartoNode: newBoardHasQuarto,
+						isPlayerTurn: len(newMoveList) %2 == 1,
+						isTerminalNode: len(newStock) == 0 || newBoardHasQuarto,
+						score: nil,
+					}
+
+					if len(newNode.currentMoves) >= maxDepth {
+						newNode.isTerminalNode = true
+					}
+
+					// Assign score
+					newNode.AssignScore()
+
+					// Alpha-beta pruning
+					// If a newNode has sibling with quarto, don't add node as child and don't generate children
+					if newNode.SiblingHasQuartoWithPiece(){
+						continue
+					}
+
+					// If current node is enemy node, and there exists a sibling node with the exact same piece that results in no quarto, remove sibling from tree
+					if !newNode.isPlayerTurn && newNode.isQuartoNode {
+						// Check sibling nodes to see if for current node there exist a sibling node with quarto
+
+						// First get sibling nodes
+						siblingNodes := node.children
+
+						for _, siblingNode := range siblingNodes {
+							// Check if the sibling node move is the same, in this case:
+							// - Both nodes are enemy moves, the current node has quarto, the sibling node has no quarto, and they use the same move
+							if siblingNode.currentMoves[len(siblingNode.currentMoves) - 1].piece == newNode.currentMoves[len(siblingNode.currentMoves) - 1].piece{
+								// Delete sibling node from tree
+								node.RemoveChildFromNode(siblingNode)
+							}
+						}
+					}
+
+					counter++ // Counter for diagnostic purposes
+					node.children = append(node.children, newNode)
+				}
+			}
+		}
+	}
+
+	for _, newNode := range node.children{
+		if !(len(newNode.currentStock) == 0 || newNode.isQuartoNode) && !(len(newNode.currentMoves) >= maxDepth)  { // If no more pieces, stop iterating
+			addChildrenBFS(newNode)
 		}
 	}
 }
