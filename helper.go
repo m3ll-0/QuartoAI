@@ -51,9 +51,12 @@ func (piece Piece)toString() string{
 	return string(piece.color[0]) + string(piece.height[0]) + string(piece.solidity[0]) + string(piece.form[0])
 }
 
-func printStatistics() {
+func printStatistics(rootNode *TreeNode) {
 	println(colorCyan, "\n ======== Statistics ========")
 	println(fmt.Sprintf("Total amount of nodes generated: %v", counter))
+	rootNode.CountTree()
+
+	println(fmt.Sprintf("Total amount of nodes in resulting root node: %v. Discrepancy: %v.", nodeCounter, counter - (nodeCounter-1)))
 	println(fmt.Sprintf("Total amount of time: %v", time.Since(timeStart)))
 }
 
@@ -257,4 +260,24 @@ func getInputPositionOpponentPlacePiece(board [4][4]interface{}, piece Piece) []
 	}
 
 	return positionTuple
+}
+
+func removeChildFromParentsChildrenList(nodeList []*TreeNode, nodeToRemove *TreeNode) []*TreeNode {
+	index := linearSearch(nodeList, nodeToRemove)
+
+	if index != -1 {
+		return append(nodeList[:index], nodeList[index+1:]...)
+	} else {
+		return nodeList
+	}
+}
+
+func linearSearch(nodeList []*TreeNode, nodeToRemove *TreeNode) int {
+	for i, n := range nodeList {
+		if n == nodeToRemove {
+			return i
+		}
+	}
+
+	return -1
 }

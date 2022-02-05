@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+var nodeCounter = 0
+
 func runAI(board [4][4]interface{}, pieceToPlace Piece) []interface{} {
 
 	setOptimizedMaxDepth(initialOptimizationScale, board) // get maxDepth from config
@@ -21,6 +23,10 @@ func runAI(board [4][4]interface{}, pieceToPlace Piece) []interface{} {
 	rootNode := &TreeNode{nil, board, stock, []Move{}, []*TreeNode{}, nil,false, true, false }
 	generateInitialChildren(rootNode, pieceToPlace)
 
+	//rootNode.CountTree()
+	//println(nodeCounter)
+	//os.Exit(1)
+
 	// Evaluate each first child node of root node independently and add first move to endList
 	firstLevelNodeList := []*TreeNode{}
 
@@ -31,7 +37,37 @@ func runAI(board [4][4]interface{}, pieceToPlace Piece) []interface{} {
 	}
 
 	println(fmt.Sprintf("[*] Determining best first level node and piece to give to opponent."))
-	bestTuple := determineBestFirstLevelNode(firstLevelNodeList)
+
+	bestTuple := []interface{}{}
+
+	// First, get all the first level nodes that contain a 1.
+	// If there are multiple, determine best 'best' node by counting the losing/winning positions and use that score
+	// If there is just 1, then choose that node
+	// If there are none, choose best 'worst' node by counting the losing/winning positions and use that score
+	// Or, go one level deeper and see if there is a child indicating a 1...
+
+	// First, get all first level nodes that contain a 1.
+	positiveFirstLevelNodeList := []*TreeNode{}
+
+	for _, firstLevelNode := range firstLevelNodeList {
+		if *firstLevelNode.score == 1{
+			positiveFirstLevelNodeList = append(positiveFirstLevelNodeList, firstLevelNode)
+		}
+	}
+
+	if len(positiveFirstLevelNodeList) == 1 { // Only one positive node, this node is the best. todo Next, determine best piece to give.
+		// Get the best child. All children are enemy nodes in this case.
+		// Repeat process. Determine the best enemy node in this case. Score 1 is the best. Score -1 is the worst.
+		// ... Naive method, get random node with 1, if none, get random node with -1
+		// Second option, sum the score of the children per enemy node and make list:
+		// Then, for option in list, make sure enemy has no quarto.
+		bestTuple = determineBestFirstLevelNode(positiveFirstLevelNodeList)
+	} else if len(positiveFirstLevelNodeList) > 1 { // More than one positive node, determine best 'best' node from all positive nodes.
+		bestTuple = determineBestFirstLevelNode(positiveFirstLevelNodeList)
+	} else if len(positiveFirstLevelNodeList) == 0 { // Not a single positive node, in this case determine the best 'worst' node from all negative nodes.
+		bestTuple = determineBestFirstLevelNode(firstLevelNodeList)
+	}
+
 	bestFirstLevelNode := bestTuple[0].(TreeNode)
 	bestPieceToGive := bestTuple[1].(Piece)
 
@@ -39,7 +75,7 @@ func runAI(board [4][4]interface{}, pieceToPlace Piece) []interface{} {
 
 	if bestPieceToGive.form == "" { // Position always loses
 		println(ColorRed, fmt.Sprintf("\nNo best piece to give, loss is imminent!"))
-		printStatistics()
+		printStatistics(rootNode)
 		os.Exit(1)
 	} else {
 		println(ColorWhite, fmt.Sprintf("\nPlace piece [%v] on position [%v, %v]", bestFirstLevelNode.currentMoves[0].piece, bestFirstLevelNode.currentMoves[0].rowNumber, bestFirstLevelNode.currentMoves[0].columnNumber))
@@ -49,7 +85,7 @@ func runAI(board [4][4]interface{}, pieceToPlace Piece) []interface{} {
 		printBoard(rootNode.currentBoard, true, bestFirstLevelNode.currentMoves[len(bestFirstLevelNode.currentMoves) - 1])
 	}
 
-	printStatistics()
+	printStatistics(rootNode)
 
 	return []interface{}{bestFirstLevelNode.currentBoard, bestPieceToGive}
 }
@@ -74,8 +110,11 @@ func determineBestFirstLevelNode(firstLevelNodeList []*TreeNode) []interface{}{
 		for piece,score := range scoreCountByPiece{
 			if float64(score) > bestPieceToGiveScore {
 
-				for _, x := range firstLevelNode.children {
-					if x.currentMoves[1].piece == piece && x.isQuartoNode { // If enemy move is not currentPieceToGive break
+				for _, secondLevelNode := range firstLevelNode.children {
+
+					// Here we check if for each of the second level node and the score we just calculated for the firstLevelNode, if the piece
+					// that has the highest score,... that if we give this piece to the opponent, the opponent has a quarto.
+					if secondLevelNode.currentMoves[1].piece == piece && secondLevelNode.isQuartoNode { // If enemy move is not currentPieceToGive, continue. If enemy has quarto, disregard node
 						continue f
 					}
 				}
@@ -122,7 +161,7 @@ func generateInitialChildren(rootNode *TreeNode, pieceToPlace Piece){
 					newBoardHasQuarto = true
 					println(ColorWhite, "\nFound Quarto in one move! Next board: ")
 					printBoard(rootNode.currentBoard, true, newMoveList[len(newMoveList)-1])
-					printStatistics()
+					printStatistics(rootNode)
 					os.Exit(1)
 				}
 
@@ -187,13 +226,30 @@ func addChildrenRecursively(node *TreeNode){
 					newNode.AssignScore()
 
 					// Alpha-beta pruning
-					// If newNode has sibling with quarto, don't add node as child and don't generate children
+					// If a newNode has sibling with quarto, don't add node as child and don't generate children
 					if newNode.SiblingHasQuartoWithPiece(){
 						continue
 					}
 
+					// If current node is enemy node, and there exists a sibling node with the exact same piece that results in no quarto, remove sibling from tree
+					if !newNode.isPlayerTurn && newNode.isQuartoNode {
+						// Check sibling nodes to see if for current node there exist a sibling node with quarto
+
+						// First get sibling nodes
+						siblingNodes := node.children
+
+						for _, siblingNode := range siblingNodes {
+							// Check if the sibling node move is the same, in this case:
+							// - Both nodes are enemy moves, the current node has quarto, the sibling node has no quarto, and they use the same move
+							if siblingNode.currentMoves[len(siblingNode.currentMoves) - 1].piece == newNode.currentMoves[len(siblingNode.currentMoves) - 1].piece{
+								// Delete sibling node from tree
+								node.RemoveChildFromNode(siblingNode)
+							}
+						}
+					}
+
 					counter++ // Counter for diagnostic purposes
-					node.children = append(node.children, newNode)
+ 					node.children = append(node.children, newNode)
 
 					if !(len(newStock) == 0 || newNode.isQuartoNode) && !(len(newNode.currentMoves) >= maxDepth)  { // If no more pieces, stop iterating
 						addChildrenRecursively(newNode)
@@ -203,6 +259,12 @@ func addChildrenRecursively(node *TreeNode){
 		}
 	}
 }
+
+func (node *TreeNode) RemoveChildFromNode(childToRemove *TreeNode) {
+	newChildrenList := removeChildFromParentsChildrenList(node.children, childToRemove)
+	node.children = newChildrenList
+}
+
 func (node *TreeNode) AssignScore() {
 
 	// AssignScore
@@ -215,6 +277,16 @@ func (node *TreeNode) AssignScore() {
 	} else if node.isTerminalNode {
 		throw := 0
 		node.score = &throw
+	}
+}
+
+// CountTree Count the amount of nodes
+func (node *TreeNode) CountTree() {
+
+	nodeCounter++
+
+	for _, cn := range node.children { // Go deep
+			cn.CountTree()
 	}
 }
 

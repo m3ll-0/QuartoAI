@@ -2,10 +2,10 @@ package main
 
 // Set initial board
 var initialBoard = [4][4]interface{}{
-	{nil, WTCC, BSOS, BTOS} ,
-	{WTCS, nil, nil, BSCC} ,
-	{BSCS, nil, nil, nil} ,
-	{nil, WTOC, BTCS, nil} ,
+		{WSCC, nil, WSCS, BTOC} ,
+		{nil, WSOC, BSCS, WSOS} ,
+		{BTCS, BSCC, BTOS, WTOC} ,
+		{WTOS, WTCS, BSOC, WTCC} ,
 }
 
 // Set optimization scale
@@ -67,3 +67,15 @@ var initialOptimizationScale = 1
 
 // First check if child node contains 1,
 // From those nodes, select...
+
+
+// FOR DEBUGGING PURPOSES
+
+//if newNode.isQuartoNode && !newNode.isPlayerTurn && newNode.isTerminalNode && len(newNode.currentMoves) == 2 {
+//cm := []Move{{rowNumber: 2, columnNumber: 1, piece: WSOC}, {rowNumber: 1, columnNumber: 1, piece: BTCC}}
+//
+//if(newNode.currentMoves[0] == cm[0] && newNode.currentMoves[1] == cm[1]){
+//println("FIndasojdasi")
+//}
+//
+//}
