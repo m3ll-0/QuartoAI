@@ -103,10 +103,12 @@ func setOptimizedMaxDepth(optimizationScale int, board [4][4]interface{}){
 		psMaxDepth = 1000
 	case 1:
 		optimizationScaleString = "OPTIMIZED_LOW"
-		if nilSpots <= 9{
+		if nilSpots <= 8{
 			psMaxDepth = 1000
-		} else if nilSpots == 10 {
+		} else if nilSpots == 9{
 			psMaxDepth = 6
+		} else if nilSpots == 10 {
+			psMaxDepth = 5
 		} else if nilSpots == 11 {
 			psMaxDepth = 4
 		} else if nilSpots == 12 {

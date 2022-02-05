@@ -2,10 +2,10 @@ package main
 
 // Set initial board
 var initialBoard = [4][4]interface{}{
-{WSCC, nil, WSCS, nil} ,
-{nil, WSOC, nil, WSOS} ,
-{BTCS, nil, BTOS, nil} ,
-{WTOS, nil, nil, WTCC} ,
+	{nil, WTCC, BSOS, BTOS} ,
+	{WTCS, nil, nil, BSCC} ,
+	{BSCS, nil, nil, nil} ,
+	{nil, WTOC, BTCS, nil} ,
 }
 
 // Set optimization scale
@@ -60,3 +60,10 @@ var initialOptimizationScale = 1
 //
 //pieceToPlace := WTCS
 
+//For a given piece I place on the board on some position
+//For some piece I give to the opponent
+//If the opponent places the piece on some position
+//The opponent is able to give me a piece such that every position I place that piece I have no quarto, but every next move results in quarto for the opponent
+
+// First check if child node contains 1,
+// From those nodes, select...
