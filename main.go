@@ -4,7 +4,8 @@ import (
 	"time"
 )
 
-var counter int = 0
+var nodeCounter = 0
+var counter = 0
 var timeStart = time.Now()
 var maxDepth = 4
 

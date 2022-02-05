@@ -7,9 +7,6 @@ import (
 	"time"
 )
 
-
-var nodeCounter = 0
-
 func runAI(board [4][4]interface{}, pieceToPlace Piece) []interface{} {
 
 	setOptimizedMaxDepth(initialOptimizationScale, board) // get maxDepth from config
