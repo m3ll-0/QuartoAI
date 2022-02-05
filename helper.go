@@ -21,7 +21,7 @@ func printBoard(board [4][4]interface{}, isPlayerMove bool, moves ...Move){
 			if col == nil {
 				if move != nil {
 					if move.rowNumber == rowCounter && move.columnNumber == colCounter {
-						if(isPlayerMove){
+						if isPlayerMove {
 							print(ColorGreen, move.piece.toString())
 						} else {
 							print(ColorRed, move.piece.toString())
@@ -54,8 +54,8 @@ func (piece Piece)toString() string{
 func printStatistics(rootNode *TreeNode) {
 	println(colorCyan, "\n ======== Statistics ========")
 	println(fmt.Sprintf("Total amount of nodes generated: %v", counter))
+	nodeCounter = 0
 	rootNode.CountTree()
-
 	println(fmt.Sprintf("Total amount of nodes in resulting root node: %v. Discrepancy: %v.", nodeCounter, counter - (nodeCounter-1)))
 	println(fmt.Sprintf("Total amount of time: %v", time.Since(timeStart)))
 }

@@ -2,10 +2,10 @@ package main
 
 // Set initial board
 var initialBoard = [4][4]interface{}{
-		{WSCC, nil, WSCS, BTOC} ,
-		{nil, WSOC, BSCS, WSOS} ,
-		{BTCS, BSCC, BTOS, WTOC} ,
-		{WTOS, WTCS, BSOC, WTCC} ,
+		{WTOC, nil, nil, nil} ,
+		{nil, nil, nil, nil} ,
+		{nil, nil, nil, nil} ,
+		{nil, nil, nil, nil} ,
 }
 
 // Set optimization scale
