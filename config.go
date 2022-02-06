@@ -2,17 +2,17 @@ package main
 
 // Set initial board
 var initialBoard = [4][4]interface{}{
-		{WSCC, nil, WSCS, nil} ,
-		{nil, WSOC, nil, WSOS} ,
-		{BTCS, BSOC, BTOS, nil} ,
-		{WTOS, nil, nil, WTCC} ,
+	{BTCS, WSCC, BTOC, WTOC} ,
+	{nil, WSOC, WSCS, nil} ,
+	{nil, BSCS, WTCS, BTOS} ,
+	{BTCC, WTOS, BSCC, nil} ,
 }
 
 // Set optimization scale
 var initialOptimizationScale = 1
 
 // Set generator method
-var generatorMethodConfig = "BFS"
+var generatorMethodConfig = "DFS"
 
 // Empty board
 //	{nil, nil, nil, nil} ,
